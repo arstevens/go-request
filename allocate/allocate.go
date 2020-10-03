@@ -27,7 +27,7 @@ func NewCyclicJobAllocator(handlerLimit int, generator handle.RequestHandlerGene
 		index:        0,
 		handlerLimit: handlerLimit,
 	}
-	alloc.handlers = append(alloc.handlers, generator.NewHandler())
+	alloc.handlers = append(alloc.handlers, alloc.generator.NewHandler())
 	return alloc
 }
 

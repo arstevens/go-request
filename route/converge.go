@@ -7,9 +7,9 @@ import (
 )
 
 /* ConvergeChannels takes in an array of handle.Request streams and converges them out
-to a single handle.Request stream. It can also receive new streams from the newStreams
-channel in the event that new handlers are allocated on the fly. ConvergeChannels finishes
-when all channels have closed */
+to a single handle.Request stream. The out stream must be buffered. It can also receive
+new streams from the newStreams channel in the event that new handlers are allocated on
+the fly. ConvergeChannels finishes when all channels have closed */
 func ConvergeChannels(inStreams []<-chan handle.Request, newStreams <-chan <-chan handle.Request, outStream chan<- handle.Request) {
 	defer close(outStream)
 	selectCases := make([]reflect.SelectCase, len(inStreams)+1)
