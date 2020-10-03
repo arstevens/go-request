@@ -66,9 +66,8 @@ func (ca *CyclicJobAllocator) QueuedJobs() int {
 	return queuedCount
 }
 
-// Close closes the cyclic allocator
-func (ca *CyclicJobAllocator) Close() {
-	for _, handler := range ca.handlers {
-		handler.Close()
-	}
+/* JobCapacity returns the max number of jobs that can
+be queued at once */
+func (ca *CyclicJobAllocator) JobCapacity() int {
+	return ca.handlerLimit * ca.generator.HandlerCapacity()
 }

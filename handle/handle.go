@@ -12,6 +12,7 @@ type RequestHandler interface {
 confrom to the RequestHandler interface */
 type RequestHandlerGenerator interface {
 	NewHandler() RequestHandler
+	HandlerCapacity() int
 }
 
 /* Defines a Request object with only one method to
