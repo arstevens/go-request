@@ -12,7 +12,7 @@ import (
 )
 
 func TestRequestLibrary(t *testing.T) {
-	requestCount := 100
+	requestCount := 20
 	datapoints := make([]byte, requestCount)
 	for i := 0; i < requestCount; i++ {
 		datapoints[i] = byte(rand.Int())
@@ -27,7 +27,7 @@ func TestRequestLibrary(t *testing.T) {
 		3: &TestHandler{capacity: 12},
 	}
 
-	go route.BeginRouting(listener, done, handlers, GetTestRequestId, UnpackTestRequest, ReadTestRequestFromConn)
+	go route.UnpackAndRoute(listener, done, handlers, UnpackTestRequest, ReadTestRequestFromConn)
 	time.Sleep(time.Second * 5)
 }
 
@@ -65,22 +65,22 @@ func (t *TestConn) Close() error {
 	return nil
 }
 
+type TestRequest int
+
+func (t *TestRequest) GetType() int {
+	return int(*t)
+}
+
 func ReadTestRequestFromConn(c route.Conn) ([]byte, error) {
 	b := make([]byte, 1)
 	c.Read(b)
 	return []byte{b[0] % 4}, nil
 }
 
-func UnpackTestRequest(b []byte) (interface{}, error) {
-	return TestRequest(b[0]), nil
+func UnpackTestRequest(b []byte) (handle.Request, error) {
+	x := TestRequest(b[0])
+	return &x, nil
 }
-
-func GetTestRequestId(i interface{}) int {
-	r := i.(TestRequest)
-	return int(r)
-}
-
-type TestRequest int
 
 type TestHandler struct {
 	capacity int

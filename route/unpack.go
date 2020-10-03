@@ -12,11 +12,11 @@ import (
 /* listenAndUnmarshal accepts any connections from listener and attempts
 to read and deserialize a request */
 func listenAndUnmarshal(listener Listener, unpacker handle.UnpackRequest, reader ReadRequest,
-	done <-chan struct{}, outStream chan<- interface{}) {
+	done <-chan struct{}, outStream chan<- handle.Request) {
 	defer close(outStream)
 	defer listener.Close()
 
-	requestChan := make(chan interface{})
+	requestChan := make(chan handle.Request)
 	go receiveRequests(listener, unpacker, reader, requestChan)
 	for {
 		select {
@@ -32,9 +32,9 @@ func listenAndUnmarshal(listener Listener, unpacker handle.UnpackRequest, reader
 }
 
 /* receiveRequests accepts all connections on the listener and
-attempts to deserialize them into interface{} objects. It then passes
+attempts to deserialize them into handle.Request objects. It then passes
 these objects through the returnStream channel */
-func receiveRequests(listener Listener, unpacker handle.UnpackRequest, reader ReadRequest, returnStream chan<- interface{}) {
+func receiveRequests(listener Listener, unpacker handle.UnpackRequest, reader ReadRequest, returnStream chan<- handle.Request) {
 	defer close(returnStream)
 	for {
 		conn, err := listener.Accept()
@@ -45,14 +45,7 @@ func receiveRequests(listener Listener, unpacker handle.UnpackRequest, reader Re
 			return
 		}
 
-		rawRequest, err := reader(conn)
-		if err != nil {
-			conn.Close()
-			log.Println(err)
-			continue
-		}
-
-		request, err := unpacker(rawRequest)
+		request, err := readAndUnpackRequest(conn, reader, unpacker)
 		if err != nil {
 			conn.Close()
 			log.Println(err)
@@ -60,6 +53,15 @@ func receiveRequests(listener Listener, unpacker handle.UnpackRequest, reader Re
 		}
 		returnStream <- request
 	}
+}
+
+// Consolidates the reading of a request
+func readAndUnpackRequest(conn Conn, reader ReadRequest, unpacker handle.UnpackRequest) (handle.Request, error) {
+	rawRequest, err := reader(conn)
+	if err != nil {
+		return nil, err
+	}
+	return unpacker(rawRequest)
 }
 
 /* ReadRequestFromConn performs the actual reading from
