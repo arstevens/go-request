@@ -24,7 +24,7 @@ func (h *TestPipeHandler) JobCapacity() int {
 }
 
 func (h *TestPipeHandler) QueuedJobs() int {
-	return h.capacity
+	return 0 //h.capacity
 }
 
 type TestPipeGenerator struct {

@@ -2,11 +2,13 @@ package allocate
 
 import (
 	"errors"
+	"time"
 
 	"github.com/arstevens/go-request/handle"
 )
 
 var AllocateLimitErr = errors.New("Job Allocation Limit Reached")
+var AllocateTimeout = time.Second
 
 /* CyclicJobAllocator is an implementation of RequestHandler
 the allocates jobs by cycling through handlers and allocating
@@ -35,26 +37,37 @@ func NewCyclicJobAllocator(handlerLimit int, generator handle.RequestHandlerGene
 func (ca *CyclicJobAllocator) AddJob(request interface{}) error {
 	var allocated bool
 	startIdx := ca.index
+	startTime := time.Now()
 	for !allocated {
 		handler := ca.handlers[ca.index]
 		if handler.QueuedJobs() != handler.JobCapacity() {
 			handler.AddJob(request)
+			ca.index = nextIndex(ca.index, len(ca.handlers))
 			allocated = true
 		} else {
-			ca.index = (ca.index + 1) % len(ca.handlers)
+			ca.index = nextIndex(ca.index, len(ca.handlers))
 			if ca.index == startIdx {
 				if len(ca.handlers) == ca.handlerLimit {
-					return AllocateLimitErr
+					if time.Since(startTime) > AllocateTimeout {
+						return AllocateLimitErr
+					}
+					ca.index = nextIndex(ca.index, len(ca.handlers))
+					time.Sleep(AllocateTimeout)
+				} else {
+					newHandler := ca.generator.NewHandler()
+					newHandler.AddJob(request)
+					ca.handlers = append(ca.handlers, newHandler)
+					ca.index = 0
+					allocated = true
 				}
-				newHandler := ca.generator.NewHandler()
-				newHandler.AddJob(request)
-				ca.handlers = append(ca.handlers, newHandler)
-				ca.index = 0
-				allocated = true
 			}
 		}
 	}
 	return nil
+}
+
+func nextIndex(curIdx int, maxIdx int) int {
+	return (curIdx + 1) % maxIdx
 }
 
 // QueuedJobs returns the number of queued jobs
