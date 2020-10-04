@@ -1,6 +1,7 @@
 package rtest
 
 import (
+	"fmt"
 	"math/rand"
 	"testing"
 	"time"
@@ -11,7 +12,8 @@ import (
 )
 
 func TestPipelining(t *testing.T) {
-	requestCount := 100
+	fmt.Printf("\nPIPELINE TEST\n=============\n\n")
+	requestCount := 30
 	datapoints := make([]byte, requestCount)
 	for i := 0; i < requestCount; i++ {
 		datapoints[i] = byte(rand.Int())

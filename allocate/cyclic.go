@@ -33,7 +33,7 @@ func NewCyclicJobAllocator(handlerLimit int, generator handle.RequestHandlerGene
 	return alloc
 }
 
-// AllocateJob allocates a request to a TransactionHandler
+// AddJob allocates a job to a RequestHandler
 func (ca *CyclicJobAllocator) AddJob(request interface{}) error {
 	var allocated bool
 	startIdx := ca.index
@@ -66,10 +66,6 @@ func (ca *CyclicJobAllocator) AddJob(request interface{}) error {
 	return nil
 }
 
-func nextIndex(curIdx int, maxIdx int) int {
-	return (curIdx + 1) % maxIdx
-}
-
 // QueuedJobs returns the number of queued jobs
 func (ca *CyclicJobAllocator) QueuedJobs() int {
 	queuedCount := 0
@@ -83,4 +79,8 @@ func (ca *CyclicJobAllocator) QueuedJobs() int {
 be queued at once */
 func (ca *CyclicJobAllocator) JobCapacity() int {
 	return ca.handlerLimit * ca.generator.HandlerCapacity()
+}
+
+func nextIndex(curIdx int, maxIdx int) int {
+	return (curIdx + 1) % maxIdx
 }
