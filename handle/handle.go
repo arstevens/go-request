@@ -8,8 +8,8 @@ type RequestHandler interface {
 	QueuedJobs() int
 }
 
-/* RequestHandlerGenerator generates new objects that
-confrom to the RequestHandler interface */
+/* RequestHandlerGenerator describes an object that
+generates new objects that conforms to the RequestHandler interface */
 type RequestHandlerGenerator interface {
 	NewHandler() RequestHandler
 	HandlerCapacity() int

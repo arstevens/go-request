@@ -65,7 +65,9 @@ func readAndUnpackRequest(conn Conn, reader ReadRequest, unpacker handle.UnpackR
 }
 
 /* ReadRequestFromConn performs the actual reading from
-a single connection */
+a single connection. It implements the ReadRequest interface.
+ReadRequestFromConn assumes the first 4 bytes contains the length
+of the message to read. */
 func ReadRequestFromNetConn(conn Conn) ([]byte, error) {
 	var packetSize int32
 	err := binary.Read(conn, binary.BigEndian, &packetSize)
