@@ -28,34 +28,34 @@ func NewPriorityJobAllocator(handlerLimit int, generator handle.RequestHandlerGe
 }
 
 // AddJob allocates a job to a RequestHandler
-func (ca *PriorityJobAllocator) AddJob(request interface{}) error {
+func (pa *PriorityJobAllocator) AddJob(request interface{}) error {
 	var allocated bool
 	startTime := time.Now()
 	minIdx := 0
-	minQueued := ca.handlers[minIdx].QueuedJobs()
-	curIdx := nextIndex(minIdx, len(ca.handlers))
+	minQueued := pa.handlers[minIdx].QueuedJobs()
+	curIdx := nextIndex(minIdx, len(pa.handlers))
 	for !allocated {
-		queued := ca.handlers[curIdx].QueuedJobs()
+		queued := pa.handlers[curIdx].QueuedJobs()
 		if queued < minQueued {
 			minIdx = curIdx
 			minQueued = queued
 		}
-		curIdx = nextIndex(curIdx, len(ca.handlers))
+		curIdx = nextIndex(curIdx, len(pa.handlers))
 		if curIdx == 0 {
-			if minQueued == ca.handlers[minIdx].JobCapacity() {
-				if len(ca.handlers) == ca.handlerLimit {
+			if minQueued == pa.handlers[minIdx].JobCapacity() {
+				if len(pa.handlers) == pa.handlerLimit {
 					if time.Since(startTime) > AllocateTimeout {
 						return AllocateLimitErr
 					}
 					time.Sleep(AllocateTimeout)
 				} else {
-					newHandler := ca.generator.NewHandler()
+					newHandler := pa.generator.NewHandler()
 					newHandler.AddJob(request)
-					ca.handlers = append(ca.handlers, newHandler)
+					pa.handlers = append(pa.handlers, newHandler)
 					allocated = true
 				}
 			} else {
-				handler := ca.handlers[minIdx]
+				handler := pa.handlers[minIdx]
 				handler.AddJob(request)
 				allocated = true
 			}
@@ -65,9 +65,9 @@ func (ca *PriorityJobAllocator) AddJob(request interface{}) error {
 }
 
 // QueuedJobs returns the number of queued jobs
-func (ca *PriorityJobAllocator) QueuedJobs() int {
+func (pa *PriorityJobAllocator) QueuedJobs() int {
 	queuedCount := 0
-	for _, handler := range ca.handlers {
+	for _, handler := range pa.handlers {
 		queuedCount += handler.QueuedJobs()
 	}
 	return queuedCount
@@ -75,6 +75,18 @@ func (ca *PriorityJobAllocator) QueuedJobs() int {
 
 /* JobCapacity returns the max number of jobs that can
 be queued at once */
-func (ca *PriorityJobAllocator) JobCapacity() int {
-	return ca.handlerLimit * ca.generator.HandlerCapacity()
+func (pa *PriorityJobAllocator) JobCapacity() int {
+	return pa.handlerLimit * pa.generator.HandlerCapacity()
+}
+
+// Close closes all the handlers
+func (pa *PriorityJobAllocator) Close() error {
+	var returnErr error
+	for _, handler := range pa.handlers {
+		err := handler.Close()
+		if err != nil {
+			returnErr = err
+		}
+	}
+	return returnErr
 }

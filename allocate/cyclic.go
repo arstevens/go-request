@@ -81,6 +81,18 @@ func (ca *CyclicJobAllocator) JobCapacity() int {
 	return ca.handlerLimit * ca.generator.HandlerCapacity()
 }
 
+// Close closes all the handlers
+func (ca *CyclicJobAllocator) Close() error {
+	var returnErr error
+	for _, handler := range ca.handlers {
+		err := handler.Close()
+		if err != nil {
+			returnErr = err
+		}
+	}
+	return returnErr
+}
+
 func nextIndex(curIdx int, maxIdx int) int {
 	return (curIdx + 1) % maxIdx
 }

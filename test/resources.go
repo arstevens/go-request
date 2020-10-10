@@ -27,6 +27,10 @@ func (h *TestPipeHandler) QueuedJobs() int {
 	return 0 //h.capacity
 }
 
+func (h *TestPipeHandler) Close() error {
+	return nil
+}
+
 type TestPipeGenerator struct {
 	cap    int
 	newOut chan<- <-chan handle.Request

@@ -6,6 +6,7 @@ type RequestHandler interface {
 	AddJob(interface{}) error
 	JobCapacity() int
 	QueuedJobs() int
+	Close() error
 }
 
 /* RequestHandlerGenerator describes an object that
