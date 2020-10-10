@@ -100,7 +100,7 @@ func ReadTestRequestFromConn(c route.Conn) ([]byte, error) {
 	return []byte{b[0] % 4}, nil
 }
 
-func UnpackTestRequest(b []byte) (handle.Request, error) {
+func UnpackTestRequest(b []byte, c route.Conn) (handle.Request, error) {
 	x := TestRequest(b[0])
 	return &x, nil
 }

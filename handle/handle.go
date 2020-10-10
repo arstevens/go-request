@@ -20,7 +20,3 @@ retrieve an integer identifying the type of the request */
 type Request interface {
 	GetType() int
 }
-
-/* Defines a function that can take a sequence of bytes
-and attempt to unpack it into an object usable by a RequestHandler */
-type UnpackRequest func([]byte) (Request, error)

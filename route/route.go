@@ -7,7 +7,7 @@ import (
 /* UnpackAndRoute begins a pipeline for the listening, interpreting and routing
 of requests from clients */
 func UnpackAndRoute(listener Listener, done <-chan struct{}, handlers map[int]handle.RequestHandler,
-	unpack handle.UnpackRequest, read ReadRequest) {
+	unpack UnpackRequest, read ReadRequest) {
 	identifyStream := make(chan handle.Request)
 	pipelineDone := make(chan struct{})
 	defer close(pipelineDone)

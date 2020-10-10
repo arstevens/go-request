@@ -11,7 +11,7 @@ import (
 
 /* listenAndUnmarshal accepts any connections from listener and attempts
 to read and deserialize a request */
-func listenAndUnmarshal(listener Listener, unpacker handle.UnpackRequest, reader ReadRequest,
+func listenAndUnmarshal(listener Listener, unpacker UnpackRequest, reader ReadRequest,
 	done <-chan struct{}, outStream chan<- handle.Request) {
 	defer close(outStream)
 	defer listener.Close()
@@ -34,7 +34,7 @@ func listenAndUnmarshal(listener Listener, unpacker handle.UnpackRequest, reader
 /* receiveRequests accepts all connections on the listener and
 attempts to deserialize them into handle.Request objects. It then passes
 these objects through the returnStream channel */
-func receiveRequests(listener Listener, unpacker handle.UnpackRequest, reader ReadRequest, returnStream chan<- handle.Request) {
+func receiveRequests(listener Listener, unpacker UnpackRequest, reader ReadRequest, returnStream chan<- handle.Request) {
 	defer close(returnStream)
 	for {
 		conn, err := listener.Accept()
@@ -56,12 +56,12 @@ func receiveRequests(listener Listener, unpacker handle.UnpackRequest, reader Re
 }
 
 // Consolidates the reading of a request
-func readAndUnpackRequest(conn Conn, reader ReadRequest, unpacker handle.UnpackRequest) (handle.Request, error) {
+func readAndUnpackRequest(conn Conn, reader ReadRequest, unpacker UnpackRequest) (handle.Request, error) {
 	rawRequest, err := reader(conn)
 	if err != nil {
 		return nil, err
 	}
-	return unpacker(rawRequest)
+	return unpacker(rawRequest, conn)
 }
 
 /* ReadRequestFromConn performs the actual reading from
