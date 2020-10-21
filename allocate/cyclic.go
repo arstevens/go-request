@@ -34,14 +34,14 @@ func NewCyclicJobAllocator(handlerLimit int, generator handle.RequestHandlerGene
 }
 
 // AddJob allocates a job to a RequestHandler
-func (ca *CyclicJobAllocator) AddJob(request interface{}) error {
+func (ca *CyclicJobAllocator) AddJob(request interface{}, conn handle.Conn) error {
 	var allocated bool
 	startIdx := ca.index
 	startTime := time.Now()
 	for !allocated {
 		handler := ca.handlers[ca.index]
 		if handler.QueuedJobs() != handler.JobCapacity() {
-			handler.AddJob(request)
+			handler.AddJob(request, conn)
 			ca.index = nextIndex(ca.index, len(ca.handlers))
 			allocated = true
 		} else {
@@ -55,7 +55,7 @@ func (ca *CyclicJobAllocator) AddJob(request interface{}) error {
 					time.Sleep(AllocateTimeout)
 				} else {
 					newHandler := ca.generator.NewHandler()
-					newHandler.AddJob(request)
+					newHandler.AddJob(request, conn)
 					ca.handlers = append(ca.handlers, newHandler)
 					ca.index = 0
 					allocated = true

@@ -9,14 +9,21 @@ import (
 	"github.com/arstevens/go-request/handle"
 )
 
+/* RequestPair is a datatype composed of the received request
+and a connection to the party that sent the request */
+type RequestPair struct {
+	Request handle.Request
+	Conn    handle.Conn
+}
+
 /* listenAndUnmarshal accepts any connections from listener and attempts
 to read and deserialize a request */
-func listenAndUnmarshal(listener Listener, unpacker UnpackRequest, reader ReadRequest,
-	done <-chan struct{}, outStream chan<- handle.Request) {
+func listenAndUnmarshal(listener Listener, unpacker handle.UnpackRequest, reader ReadRequest,
+	done <-chan struct{}, outStream chan<- RequestPair) {
 	defer close(outStream)
 	defer listener.Close()
 
-	requestChan := make(chan handle.Request)
+	requestChan := make(chan RequestPair)
 	go receiveRequests(listener, unpacker, reader, requestChan)
 	for {
 		select {
@@ -34,7 +41,7 @@ func listenAndUnmarshal(listener Listener, unpacker UnpackRequest, reader ReadRe
 /* receiveRequests accepts all connections on the listener and
 attempts to deserialize them into handle.Request objects. It then passes
 these objects through the returnStream channel */
-func receiveRequests(listener Listener, unpacker UnpackRequest, reader ReadRequest, returnStream chan<- handle.Request) {
+func receiveRequests(listener Listener, unpacker handle.UnpackRequest, reader ReadRequest, returnStream chan<- RequestPair) {
 	defer close(returnStream)
 	for {
 		conn, err := listener.Accept()
@@ -51,12 +58,12 @@ func receiveRequests(listener Listener, unpacker UnpackRequest, reader ReadReque
 			log.Println(err)
 			continue
 		}
-		returnStream <- request
+		returnStream <- RequestPair{request, conn}
 	}
 }
 
 // Consolidates the reading of a request
-func readAndUnpackRequest(conn Conn, reader ReadRequest, unpacker UnpackRequest) (handle.Request, error) {
+func readAndUnpackRequest(conn handle.Conn, reader ReadRequest, unpacker handle.UnpackRequest) (handle.Request, error) {
 	rawRequest, err := reader(conn)
 	if err != nil {
 		return nil, err
@@ -65,10 +72,8 @@ func readAndUnpackRequest(conn Conn, reader ReadRequest, unpacker UnpackRequest)
 }
 
 /* ReadRequestFromConn performs the actual reading from
-a single connection. It implements the ReadRequest interface.
-ReadRequestFromConn assumes the first 4 bytes contains the length
-of the message to read. */
-func ReadRequestFromNetConn(conn Conn) ([]byte, error) {
+a single connection */
+func ReadRequestFromNetConn(conn handle.Conn) ([]byte, error) {
 	var packetSize int32
 	err := binary.Read(conn, binary.BigEndian, &packetSize)
 	if err != nil {

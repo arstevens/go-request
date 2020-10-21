@@ -11,11 +11,11 @@ import (
 type TestPipeHandler struct {
 	capacity int
 	queued   int
-	out      chan handle.Request
+	out      chan route.RequestPair
 }
 
-func (h *TestPipeHandler) AddJob(i interface{}) error {
-	h.out <- i.(handle.Request)
+func (h *TestPipeHandler) AddJob(i interface{}, c handle.Conn) error {
+	h.out <- route.RequestPair{i.(handle.Request), c}
 	return nil
 }
 
@@ -33,11 +33,11 @@ func (h *TestPipeHandler) Close() error {
 
 type TestPipeGenerator struct {
 	cap    int
-	newOut chan<- <-chan handle.Request
+	newOut chan<- <-chan route.RequestPair
 }
 
 func (g *TestPipeGenerator) NewHandler() handle.RequestHandler {
-	nChan := make(chan handle.Request)
+	nChan := make(chan route.RequestPair)
 	g.newOut <- nChan
 	return &TestPipeHandler{capacity: g.cap, out: nChan}
 }
@@ -62,7 +62,7 @@ type TestListener struct {
 	datapoints []byte
 }
 
-func (t *TestListener) Accept() (route.Conn, error) {
+func (t *TestListener) Accept() (handle.Conn, error) {
 	if len(t.datapoints) == 0 {
 		return nil, errors.New("out of stuff")
 	}
@@ -98,13 +98,13 @@ func (t *TestRequest) GetType() int {
 	return int(*t)
 }
 
-func ReadTestRequestFromConn(c route.Conn) ([]byte, error) {
+func ReadTestRequestFromConn(c handle.Conn) ([]byte, error) {
 	b := make([]byte, 1)
 	c.Read(b)
 	return []byte{b[0] % 4}, nil
 }
 
-func UnpackTestRequest(b []byte, c route.Conn) (handle.Request, error) {
+func UnpackTestRequest(b []byte, c handle.Conn) (handle.Request, error) {
 	x := TestRequest(b[0])
 	return &x, nil
 }
@@ -114,7 +114,7 @@ type TestHandler struct {
 	queued   int
 }
 
-func (h *TestHandler) AddJob(interface{}) error {
+func (h *TestHandler) AddJob(interface{}, handle.Conn) error {
 	if h.queued != h.capacity {
 		h.queued++
 	}

@@ -3,19 +3,15 @@ package route
 import (
 	"io"
 	"net"
+
+	"github.com/arstevens/go-request/handle"
 )
 
 /* Listener defines a type that can accept new connections
 to receive requests */
 type Listener interface {
 	io.Closer
-	Accept() (Conn, error)
-}
-
-/* Conn describes an object that can be used to read
-request from */
-type Conn interface {
-	io.ReadWriteCloser
+	Accept() (handle.Conn, error)
 }
 
 // NetListener wraps a net.Listener so it implements the Listener interface
@@ -24,7 +20,7 @@ type NetListener struct {
 }
 
 // Accept returns a net.Conn wrapped as a NetConn and an error
-func (nl *NetListener) Accept() (Conn, error) {
+func (nl *NetListener) Accept() (handle.Conn, error) {
 	nConn, err := nl.listener.Accept()
 	conn := NetConn{conn: nConn}
 	return &conn, err

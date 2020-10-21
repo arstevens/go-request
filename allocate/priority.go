@@ -28,7 +28,7 @@ func NewPriorityJobAllocator(handlerLimit int, generator handle.RequestHandlerGe
 }
 
 // AddJob allocates a job to a RequestHandler
-func (pa *PriorityJobAllocator) AddJob(request interface{}) error {
+func (pa *PriorityJobAllocator) AddJob(request interface{}, conn handle.Conn) error {
 	var allocated bool
 	startTime := time.Now()
 	minIdx := 0
@@ -50,13 +50,13 @@ func (pa *PriorityJobAllocator) AddJob(request interface{}) error {
 					time.Sleep(AllocateTimeout)
 				} else {
 					newHandler := pa.generator.NewHandler()
-					newHandler.AddJob(request)
+					newHandler.AddJob(request, conn)
 					pa.handlers = append(pa.handlers, newHandler)
 					allocated = true
 				}
 			} else {
 				handler := pa.handlers[minIdx]
-				handler.AddJob(request)
+				handler.AddJob(request, conn)
 				allocated = true
 			}
 		}

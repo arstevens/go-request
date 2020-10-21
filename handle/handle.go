@@ -1,9 +1,18 @@
 package handle
 
+import "io"
+
+/* Conn describes an object that can be used to read
+request from */
+type Conn interface {
+	io.ReadWriteCloser
+}
+
 /* RequestHandler describes an object that can handle a
-stream of requests */
+stream of requests. RequestHandler is responsible for closing
+the Conn for each job it receives */
 type RequestHandler interface {
-	AddJob(interface{}) error
+	AddJob(interface{}, Conn) error
 	JobCapacity() int
 	QueuedJobs() int
 	Close() error
@@ -21,3 +30,7 @@ retrieve an integer identifying the type of the request */
 type Request interface {
 	GetType() int
 }
+
+/* Defines a function that can take a sequence of bytes
+and attempt to unpack it into an object usable by a RequestHandler */
+type UnpackRequest func([]byte, Conn) (Request, error)
