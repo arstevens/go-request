@@ -12,7 +12,7 @@ that could not be mapped to a handler */
 var UnknownRequestErr = errors.New("Unknown request type code")
 
 // identifyAndRoute takes a request and sends it to the proper subcomponent
-func identifyAndRoute(requestStream <-chan RequestPair, handlers map[int]handle.RequestHandler) {
+func identifyAndRoute(requestStream <-chan handle.RequestPair, handlers map[int]handle.RequestHandler) {
 	for {
 		requestPair, ok := <-requestStream
 		if !ok {
@@ -20,7 +20,8 @@ func identifyAndRoute(requestStream <-chan RequestPair, handlers map[int]handle.
 			return
 		}
 
-		initialType := requestPair.Request.GetType()
+		request := requestPair.Request.(handle.Request)
+		initialType := request.GetType()
 		handler, ok := handlers[initialType]
 		if !ok {
 			log.Println(UnknownRequestErr)

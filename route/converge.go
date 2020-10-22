@@ -2,13 +2,15 @@ package route
 
 import (
 	"reflect"
+
+	"github.com/arstevens/go-request/handle"
 )
 
 /* ConvergeChannels takes in an array of handle.Request streams and converges them out
 to a single handle.Request stream. The out stream must be buffered. It can also receive
 new streams from the newStreams channel in the event that new handlers are allocated on
 the fly. ConvergeChannels finishes when all channels have closed */
-func ConvergeChannels(inStreams []<-chan RequestPair, newStreams <-chan <-chan RequestPair, outStream chan<- RequestPair) {
+func ConvergeChannels(inStreams []<-chan handle.RequestPair, newStreams <-chan <-chan handle.RequestPair, outStream chan<- handle.RequestPair) {
 	defer close(outStream)
 	selectCases := make([]reflect.SelectCase, len(inStreams)+1)
 	selectCases[0] = reflect.SelectCase{Dir: reflect.SelectRecv, Chan: reflect.ValueOf(newStreams)}
@@ -22,10 +24,10 @@ func ConvergeChannels(inStreams []<-chan RequestPair, newStreams <-chan <-chan R
 			selectCases = append(selectCases[:idx], selectCases[idx+1:]...)
 			continue
 		} else if idx == 0 {
-			newStream := value.Interface().(<-chan RequestPair)
+			newStream := value.Interface().(<-chan handle.RequestPair)
 			selectCases = append(selectCases, reflect.SelectCase{Dir: reflect.SelectRecv, Chan: reflect.ValueOf(newStream)})
 		} else {
-			request := value.Interface().(RequestPair)
+			request := value.Interface().(handle.RequestPair)
 			outStream <- request
 		}
 	}

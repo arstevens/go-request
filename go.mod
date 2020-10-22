@@ -17,7 +17,9 @@ require (
 	github.com/mibk/dupl v1.0.0 // indirect
 	github.com/opennota/check v0.0.0-20180911053232-0c771f5545ff // indirect
 	github.com/securego/gosec v0.0.0-20200401082031-e946c8c39989 // indirect
+	github.com/stripe/safesql v0.2.0 // indirect
 	github.com/tsenart/deadcode v0.0.0-20160724212837-210d2dc333e9 // indirect
+	github.com/walle/lll v1.0.1 // indirect
 	golang.org/x/tools v0.0.0-20201002184944-ecd9fd270d5d // indirect
 	honnef.co/go/tools v0.0.1-2020.1.5 // indirect
 	mvdan.cc/interfacer v0.0.0-20180901003855-c20040233aed // indirect

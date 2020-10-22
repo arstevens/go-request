@@ -5,17 +5,16 @@ import (
 	"fmt"
 
 	"github.com/arstevens/go-request/handle"
-	"github.com/arstevens/go-request/route"
 )
 
 type TestPipeHandler struct {
 	capacity int
 	queued   int
-	out      chan route.RequestPair
+	out      chan handle.RequestPair
 }
 
 func (h *TestPipeHandler) AddJob(i interface{}, c handle.Conn) error {
-	h.out <- route.RequestPair{i.(handle.Request), c}
+	h.out <- handle.RequestPair{i.(handle.Request), c}
 	return nil
 }
 
@@ -33,11 +32,11 @@ func (h *TestPipeHandler) Close() error {
 
 type TestPipeGenerator struct {
 	cap    int
-	newOut chan<- <-chan route.RequestPair
+	newOut chan<- <-chan handle.RequestPair
 }
 
 func (g *TestPipeGenerator) NewHandler() handle.RequestHandler {
-	nChan := make(chan route.RequestPair)
+	nChan := make(chan handle.RequestPair)
 	g.newOut <- nChan
 	return &TestPipeHandler{capacity: g.cap, out: nChan}
 }

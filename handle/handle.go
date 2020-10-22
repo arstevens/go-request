@@ -31,6 +31,13 @@ type Request interface {
 	GetType() int
 }
 
+/* RequestPair is a datatype composed of the received request
+and a connection to the party that sent the request */
+type RequestPair struct {
+	Request interface{}
+	Conn    Conn
+}
+
 /* Defines a function that can take a sequence of bytes
 and attempt to unpack it into an object usable by a RequestHandler */
 type UnpackRequest func([]byte, Conn) (Request, error)

@@ -9,21 +9,14 @@ import (
 	"github.com/arstevens/go-request/handle"
 )
 
-/* RequestPair is a datatype composed of the received request
-and a connection to the party that sent the request */
-type RequestPair struct {
-	Request handle.Request
-	Conn    handle.Conn
-}
-
 /* listenAndUnmarshal accepts any connections from listener and attempts
 to read and deserialize a request */
 func listenAndUnmarshal(listener Listener, unpacker handle.UnpackRequest, reader ReadRequest,
-	done <-chan struct{}, outStream chan<- RequestPair) {
+	done <-chan struct{}, outStream chan<- handle.RequestPair) {
 	defer close(outStream)
 	defer listener.Close()
 
-	requestChan := make(chan RequestPair)
+	requestChan := make(chan handle.RequestPair)
 	go receiveRequests(listener, unpacker, reader, requestChan)
 	for {
 		select {
@@ -41,7 +34,7 @@ func listenAndUnmarshal(listener Listener, unpacker handle.UnpackRequest, reader
 /* receiveRequests accepts all connections on the listener and
 attempts to deserialize them into handle.Request objects. It then passes
 these objects through the returnStream channel */
-func receiveRequests(listener Listener, unpacker handle.UnpackRequest, reader ReadRequest, returnStream chan<- RequestPair) {
+func receiveRequests(listener Listener, unpacker handle.UnpackRequest, reader ReadRequest, returnStream chan<- handle.RequestPair) {
 	defer close(returnStream)
 	for {
 		conn, err := listener.Accept()
@@ -58,7 +51,7 @@ func receiveRequests(listener Listener, unpacker handle.UnpackRequest, reader Re
 			log.Println(err)
 			continue
 		}
-		returnStream <- RequestPair{request, conn}
+		returnStream <- handle.RequestPair{request, conn}
 	}
 }
 

@@ -20,15 +20,15 @@ func TestPipelining(t *testing.T) {
 	}
 
 	listener := &TestListener{datapoints}
-	newConverge := make(chan (<-chan route.RequestPair), 1)
+	newConverge := make(chan (<-chan handle.RequestPair), 1)
 	gen := &TestPipeGenerator{cap: 5, newOut: newConverge}
 	alloc := allocate.NewCyclicJobAllocator(10, gen)
 
 	handlerCount := 3
-	chans := make([]chan route.RequestPair, handlerCount)
+	chans := make([]chan handle.RequestPair, handlerCount)
 	handlers := map[int]handle.RequestHandler{3: alloc}
 	for i := 0; i < handlerCount; i++ {
-		chans[i] = make(chan route.RequestPair)
+		chans[i] = make(chan handle.RequestPair)
 		handlers[i] = &TestPipeHandler{capacity: 10, out: chans[i]}
 	}
 
@@ -39,8 +39,8 @@ func TestPipelining(t *testing.T) {
 		3: &TestHandler{capacity: 20},
 	}
 
-	pipe := make(chan route.RequestPair)
-	go route.ConvergeChannels([]<-chan route.RequestPair{chans[0], chans[1],
+	pipe := make(chan handle.RequestPair)
+	go route.ConvergeChannels([]<-chan handle.RequestPair{chans[0], chans[1],
 		chans[2]}, newConverge, pipe)
 
 	done := make(chan struct{})
