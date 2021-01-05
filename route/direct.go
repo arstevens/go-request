@@ -9,7 +9,7 @@ import (
 
 type directPair struct {
 	Pair        handle.RequestPair
-	RequestType int
+	RequestType int32
 }
 
 /* UnknownRequestErr is an error indicating receiving a request
@@ -17,7 +17,7 @@ that could not be mapped to a handler */
 var UnknownRequestErr = errors.New("Unknown request type code")
 
 // identifyAndRoute takes a request and sends it to the proper subcomponent
-func identifyAndRoute(requestStream <-chan directPair, handlers map[int]handle.RequestHandler) {
+func identifyAndRoute(requestStream <-chan directPair, handlers map[int32]handle.RequestHandler) {
 	for {
 		directPair, ok := <-requestStream
 		if !ok {

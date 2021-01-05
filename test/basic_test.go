@@ -24,13 +24,13 @@ func TestRequestLibrary(t *testing.T) {
 
 	gen := &TestGenerator{cap: 10}
 	alloc := allocate.NewPriorityJobAllocator(10, gen)
-	handlers := map[int]handle.RequestHandler{
+	handlers := map[int32]handle.RequestHandler{
 		0: &TestHandler{capacity: 10},
 		1: &TestHandler{capacity: 15},
 		2: &TestHandler{capacity: 10},
 		3: alloc,
 	}
-	unpackers := map[int]handle.UnpackRequest{
+	unpackers := map[int32]handle.UnpackRequest{
 		0: UnpackTestRequest,
 		1: UnpackTestRequest,
 		2: UnpackTestRequest,

@@ -12,7 +12,7 @@ import (
 /* listenAndUnmarshal accepts any connections from listener and attempts
 to read and deserialize a request */
 func listenAndUnmarshal(listener Listener, unpacker UnpackRouteRequest, reader ReadRequest,
-	unpackerMap map[int]handle.UnpackRequest, done <-chan struct{}, outStream chan<- directPair) {
+	unpackerMap map[int32]handle.UnpackRequest, done <-chan struct{}, outStream chan<- directPair) {
 	defer close(outStream)
 	defer listener.Close()
 
@@ -35,7 +35,7 @@ func listenAndUnmarshal(listener Listener, unpacker UnpackRouteRequest, reader R
 attempts to deserialize them into handle.Request objects. It then passes
 these objects through the returnStream channel */
 func receiveRequests(listener Listener, routeUnpacker UnpackRouteRequest, reader ReadRequest,
-	unpackers map[int]handle.UnpackRequest, returnStream chan<- directPair) {
+	unpackers map[int32]handle.UnpackRequest, returnStream chan<- directPair) {
 	defer close(returnStream)
 	for {
 		conn, err := listener.Accept()

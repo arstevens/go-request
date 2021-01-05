@@ -28,7 +28,7 @@ type RequestHandlerGenerator interface {
 /* Defines a Request object with only one method to
 retrieve an integer identifying the type of the request */
 type Request interface {
-	GetType() int
+	GetType() int32
 	GetRequest() []byte
 }
 
