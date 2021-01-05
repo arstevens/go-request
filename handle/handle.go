@@ -29,6 +29,7 @@ type RequestHandlerGenerator interface {
 retrieve an integer identifying the type of the request */
 type Request interface {
 	GetType() int
+	GetRequest() []byte
 }
 
 /* RequestPair is a datatype composed of the received request
@@ -40,4 +41,4 @@ type RequestPair struct {
 
 /* Defines a function that can take a sequence of bytes
 and attempt to unpack it into an object usable by a RequestHandler */
-type UnpackRequest func([]byte, Conn) (Request, error)
+type UnpackRequest func([]byte) (interface{}, error)

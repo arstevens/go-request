@@ -11,13 +11,13 @@ import (
 
 /* listenAndUnmarshal accepts any connections from listener and attempts
 to read and deserialize a request */
-func listenAndUnmarshal(listener Listener, unpacker handle.UnpackRequest, reader ReadRequest,
-	done <-chan struct{}, outStream chan<- handle.RequestPair) {
+func listenAndUnmarshal(listener Listener, unpacker UnpackRouteRequest, reader ReadRequest,
+	unpackerMap map[int]handle.UnpackRequest, done <-chan struct{}, outStream chan<- directPair) {
 	defer close(outStream)
 	defer listener.Close()
 
-	requestChan := make(chan handle.RequestPair)
-	go receiveRequests(listener, unpacker, reader, requestChan)
+	requestChan := make(chan directPair)
+	go receiveRequests(listener, unpacker, reader, unpackerMap, requestChan)
 	for {
 		select {
 		case request, ok := <-requestChan:
@@ -34,7 +34,8 @@ func listenAndUnmarshal(listener Listener, unpacker handle.UnpackRequest, reader
 /* receiveRequests accepts all connections on the listener and
 attempts to deserialize them into handle.Request objects. It then passes
 these objects through the returnStream channel */
-func receiveRequests(listener Listener, unpacker handle.UnpackRequest, reader ReadRequest, returnStream chan<- handle.RequestPair) {
+func receiveRequests(listener Listener, routeUnpacker UnpackRouteRequest, reader ReadRequest,
+	unpackers map[int]handle.UnpackRequest, returnStream chan<- directPair) {
 	defer close(returnStream)
 	for {
 		conn, err := listener.Accept()
@@ -45,23 +46,38 @@ func receiveRequests(listener Listener, unpacker handle.UnpackRequest, reader Re
 			return
 		}
 
-		request, err := readAndUnpackRequest(conn, reader, unpacker)
+		request, err := readAndUnpackRequest(conn, reader, routeUnpacker)
 		if err != nil {
 			conn.Close()
 			log.Println(err)
 			continue
 		}
-		returnStream <- handle.RequestPair{request, conn}
+		requestType := request.GetType()
+		unpacker, ok := unpackers[requestType]
+		if !ok {
+			conn.Close()
+			log.Println(err)
+			continue
+		}
+		requestIface, err := unpacker(request.GetRequest())
+		if err != nil {
+			conn.Close()
+			log.Printf("Failed to unpack request in listenAndUnmarshal: %v\n", err)
+			continue
+		}
+
+		pair := handle.RequestPair{requestIface, conn}
+		returnStream <- directPair{pair, requestType}
 	}
 }
 
 // Consolidates the reading of a request
-func readAndUnpackRequest(conn handle.Conn, reader ReadRequest, unpacker handle.UnpackRequest) (handle.Request, error) {
+func readAndUnpackRequest(conn handle.Conn, reader ReadRequest, unpacker UnpackRouteRequest) (handle.Request, error) {
 	rawRequest, err := reader(conn)
 	if err != nil {
 		return nil, err
 	}
-	return unpacker(rawRequest, conn)
+	return unpacker(rawRequest)
 }
 
 /* ReadRequestFromConn performs the actual reading from

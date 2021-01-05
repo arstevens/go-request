@@ -30,7 +30,13 @@ func TestRequestLibrary(t *testing.T) {
 		2: &TestHandler{capacity: 10},
 		3: alloc,
 	}
+	unpackers := map[int]handle.UnpackRequest{
+		0: UnpackTestRequest,
+		1: UnpackTestRequest,
+		2: UnpackTestRequest,
+		3: UnpackTestRequest,
+	}
 
-	go route.UnpackAndRoute(listener, done, handlers, UnpackTestRequest, ReadTestRequestFromConn)
+	go route.UnpackAndRoute(listener, done, handlers, UnpackTestWrapperRequest, unpackers, ReadTestRequestFromConn)
 	time.Sleep(time.Second * 5)
 }

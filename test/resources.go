@@ -91,10 +91,17 @@ func (t *TestConn) Close() error {
 	return nil
 }
 
-type TestRequest int
+type TestRequest struct {
+	code    int
+	request []byte
+}
 
 func (t *TestRequest) GetType() int {
-	return int(*t)
+	return t.code
+}
+
+func (t *TestRequest) GetRequest() []byte {
+	return t.request
 }
 
 func ReadTestRequestFromConn(c handle.Conn) ([]byte, error) {
@@ -103,9 +110,16 @@ func ReadTestRequestFromConn(c handle.Conn) ([]byte, error) {
 	return []byte{b[0] % 4}, nil
 }
 
-func UnpackTestRequest(b []byte, c handle.Conn) (handle.Request, error) {
-	x := TestRequest(b[0])
+func UnpackTestWrapperRequest(b []byte) (handle.Request, error) {
+	x := TestRequest{
+		code:    int(b[0]),
+		request: []byte{},
+	}
 	return &x, nil
+}
+
+func UnpackTestRequest(b []byte) (interface{}, error) {
+	return nil, nil
 }
 
 type TestHandler struct {
